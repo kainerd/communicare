@@ -1,6 +1,12 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { pool } = require('../config/db');
-const { getAllCaregivers, setStatus, updatePassword, updateUser, findById, findByEmail } = require('../models/userModel');
+const {
+  getAllCaregivers, getPendingCaregivers, setStatus,
+  updatePassword, updateUser, findById, findByEmail,
+  setApproved, setVerificationToken,
+} = require('../models/userModel');
+const { sendVerificationEmail } = require('../utils/email');
 
 // ── Caregivers ───────────────────────────────────────────────────────────────
 
@@ -8,6 +14,48 @@ async function listCaregivers(req, res, next) {
   try {
     const caregivers = await getAllCaregivers();
     res.json({ caregivers });
+  } catch (err) { next(err); }
+}
+
+async function listPendingCaregivers(req, res, next) {
+  try {
+    const caregivers = await getPendingCaregivers();
+    res.json({ caregivers });
+  } catch (err) { next(err); }
+}
+
+async function approveCaregiver(req, res, next) {
+  try {
+    const { id } = req.params;
+    const user = await findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role !== 'caregiver') return res.status(400).json({ error: 'Can only approve caregivers' });
+    if (user.is_approved) return res.status(400).json({ error: 'Account is already approved' });
+
+    // Mark as approved
+    await setApproved(id);
+
+    // Generate a 24-hour verification token
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // +24 h
+    await setVerificationToken(id, token, expiresAt);
+
+    // Send verification email
+    await sendVerificationEmail(user.email, user.name, token);
+
+    res.json({ message: `Caregiver approved. Verification email sent to ${user.email}.` });
+  } catch (err) { next(err); }
+}
+
+async function rejectCaregiver(req, res, next) {
+  try {
+    const { id } = req.params;
+    const user = await findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role !== 'caregiver') return res.status(400).json({ error: 'Can only reject caregivers' });
+
+    await setStatus(id, 'rejected');
+    res.json({ message: 'Caregiver registration rejected.' });
   } catch (err) { next(err); }
 }
 
@@ -122,7 +170,8 @@ async function updateCaregiver(req, res, next) {
 }
 
 module.exports = {
-  listCaregivers, setCaregiverStatus, resetCaregiverPassword,
-  updateCaregiver,
+  listCaregivers, listPendingCaregivers,
+  approveCaregiver, rejectCaregiver,
+  setCaregiverStatus, resetCaregiverPassword, updateCaregiver,
   listAllPatients, listAllVisits,
 };
