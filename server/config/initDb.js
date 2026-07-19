@@ -33,7 +33,11 @@ async function init() {
       email         VARCHAR(255)  NOT NULL UNIQUE,
       password_hash VARCHAR(255)  NOT NULL,
       role          ENUM('patient','caregiver','admin') NOT NULL DEFAULT 'caregiver',
-      status        ENUM('active','disabled') NOT NULL DEFAULT 'active',
+      status        ENUM('active','disabled','rejected') NOT NULL DEFAULT 'active',
+      is_approved   TINYINT(1) NOT NULL DEFAULT 0,
+      is_verified   TINYINT(1) NOT NULL DEFAULT 0,
+      verification_token            VARCHAR(128) NULL,
+      verification_token_expires_at DATETIME NULL,
       created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -47,10 +51,12 @@ async function init() {
       full_name     VARCHAR(150) NOT NULL,
       age           INT          NULL,
       gender        ENUM('male','female','other') NULL,
-      caregiver_id  INT          NOT NULL,
+      caregiver_id  INT          NULL,
       medical_notes TEXT         NULL,
       created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (caregiver_id) REFERENCES users(id) ON DELETE CASCADE
+      -- SET NULL (not CASCADE): deleting a caregiver account must unlink
+      -- their patients, not delete them — see fixUserDeleteFK.js.
+      FOREIGN KEY (caregiver_id) REFERENCES users(id) ON DELETE SET NULL
     )
   `);
   console.log('Table: patients ✓');
@@ -60,12 +66,13 @@ async function init() {
     CREATE TABLE IF NOT EXISTS visits (
       id           INT AUTO_INCREMENT PRIMARY KEY,
       patient_id   INT NOT NULL,
-      caregiver_id INT NOT NULL,
+      caregiver_id INT NULL,
       visit_date   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       status       ENUM('open','closed') NOT NULL DEFAULT 'open',
       created_at   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (patient_id)   REFERENCES patients(id) ON DELETE CASCADE,
-      FOREIGN KEY (caregiver_id) REFERENCES users(id)    ON DELETE CASCADE
+      -- SET NULL: a deleted caregiver's past visit history must stay intact
+      FOREIGN KEY (caregiver_id) REFERENCES users(id)    ON DELETE SET NULL
     )
   `);
   console.log('Table: visits ✓');
@@ -75,8 +82,8 @@ async function init() {
     CREATE TABLE IF NOT EXISTS board_selections (
       id         INT AUTO_INCREMENT PRIMARY KEY,
       visit_id   INT NOT NULL,
-      category   ENUM('body_part','need','emotion','symptom') NOT NULL,
-      label      VARCHAR(100) NOT NULL,
+      category   ENUM('body_part','need','emotion','symptom','free_text') NOT NULL,
+      label      VARCHAR(500) NOT NULL,
       created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (visit_id) REFERENCES visits(id) ON DELETE CASCADE
     )
@@ -113,13 +120,24 @@ async function init() {
 
   if (existing.length === 0) {
     const hash = await bcrypt.hash('Admin123', 12);
+    // is_approved / is_verified explicitly set to 1 — admins are always
+    // approved+verified and have no self-service flow to satisfy these
+    // gates otherwise (see authController.login).
     await root.query(
-      'INSERT INTO users (name, email, password_hash, role, status) VALUES (?, ?, ?, ?, ?)',
+      `INSERT INTO users (name, email, password_hash, role, status, is_approved, is_verified)
+       VALUES (?, ?, ?, ?, ?, 1, 1)`,
       ['Admin', adminEmail, hash, 'admin', 'active'],
     );
     console.log('Admin account seeded ✓');
   } else {
-    console.log('Admin account already exists — skipped.');
+    // Defensive: if an admin row somehow exists without these flags set
+    // (e.g. inserted manually, or created before this fix), self-heal it.
+    await root.query(
+      `UPDATE users SET is_approved = 1, is_verified = 1
+       WHERE email = ? AND (is_approved = 0 OR is_verified = 0)`,
+      [adminEmail],
+    );
+    console.log('Admin account already exists — skipped (verified approval flags are set).');
   }
 
   await root.end();

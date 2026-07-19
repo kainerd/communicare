@@ -1,14 +1,16 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import apiClient from '../api/client';
 
 export default function Login() {
   const { storeSession } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const expired = searchParams.get('expired') === '1';
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -32,43 +34,65 @@ export default function Login() {
   }
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
-        <h1 style={s.logo}>🩺 CommuniCare</h1>
-        <h2 style={s.title}>Sign In</h2>
+    <div style={s.page} className="auth-page">
+      <div style={s.card} className="auth-card">
+
+        {/* Brand mark */}
+        <div style={s.logoArea} className="cc-auth-logo">
+          <span style={s.logoIcon}>🩺</span>
+          <span style={s.logoText}>CommuniCare</span>
+        </div>
+
+        <h2 style={s.title} className="cc-auth-title">Welcome back</h2>
+        <p style={s.subtitle}>Sign in to your caregiver account</p>
+
+        {expired && (
+          <p style={s.notice} role="alert">
+            Your session has expired. Please sign in again.
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} style={s.form}>
-          <label style={s.label}>Email</label>
-          <input
-            style={s.input}
-            type="email"
-            name="email"
-            value={form.email}
-            onChange={handleChange}
-            placeholder="you@example.com"
-            required
-            autoComplete="email"
-          />
-          <label style={s.label}>Password</label>
-          <input
-            style={s.input}
-            type="password"
-            name="password"
-            value={form.password}
-            onChange={handleChange}
-            placeholder="••••••••"
-            required
-            autoComplete="current-password"
-          />
-          {error && <p style={s.error}>{error}</p>}
+          <div style={s.field}>
+            <label style={s.label} htmlFor="email">Email address</label>
+            <input
+              id="email"
+              style={s.input}
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              placeholder="you@hospital.com"
+              required
+              autoComplete="email"
+            />
+          </div>
+
+          <div style={s.field}>
+            <label style={s.label} htmlFor="password">Password</label>
+            <input
+              id="password"
+              style={s.input}
+              type="password"
+              name="password"
+              value={form.password}
+              onChange={handleChange}
+              placeholder="••••••••"
+              required
+              autoComplete="current-password"
+            />
+          </div>
+
+          {error && <p style={s.error} role="alert">{error}</p>}
+
           <button style={s.btn} type="submit" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
+
         <p style={s.footer}>
           No account?{' '}
-          <Link to="/register" style={s.link}>
-            Register as caregiver
-          </Link>
+          <Link to="/register" style={s.link}>Register as caregiver</Link>
         </p>
       </div>
     </div>
@@ -78,52 +102,97 @@ export default function Login() {
 const s = {
   page: {
     minHeight: '100vh',
-    background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)',
+    background: 'linear-gradient(160deg, #1565c0 0%, #0d47a1 55%, #01579b 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    padding: '24px',
   },
   card: {
-    background: '#fff',
-    borderRadius: '16px',
-    padding: '40px 48px',
+    background: '#ffffff',
+    borderRadius: '20px',
+    padding: '44px 48px',
     width: '100%',
-    maxWidth: '420px',
-    boxShadow: '0 24px 64px rgba(0,0,0,0.3)',
+    maxWidth: '440px',
+    boxShadow: '0 24px 80px rgba(13,71,161,0.3)',
   },
-  logo: { textAlign: 'center', fontSize: '1.5rem', marginBottom: '4px', color: '#1e3a5f' },
-  title: { textAlign: 'center', fontSize: '1.25rem', fontWeight: '700', color: '#334155', marginBottom: '28px' },
-  form: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginTop: '10px' },
+
+  logoArea: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    marginBottom: '20px',
+  },
+  logoIcon: { fontSize: '2rem', lineHeight: 1 },
+  logoText: {
+    fontSize: '1.5rem',
+    fontWeight: '800',
+    color: '#1565c0',
+    letterSpacing: '-0.02em',
+  },
+
+  title: {
+    textAlign: 'center',
+    fontSize: '1.375rem',
+    fontWeight: '800',
+    color: '#0f1c2e',
+    marginBottom: '4px',
+  },
+  subtitle: {
+    textAlign: 'center',
+    fontSize: '0.9rem',
+    color: '#7a8fa0',
+    marginBottom: '28px',
+  },
+
+  form: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  field: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  label: { fontSize: '0.875rem', fontWeight: '600', color: '#4f6070' },
   input: {
-    padding: '10px 14px',
-    borderRadius: '8px',
-    border: '1.5px solid #cbd5e1',
-    fontSize: '0.95rem',
+    padding: '12px 16px',
+    borderRadius: '10px',
+    border: '1.5px solid #dde3ea',
+    fontSize: '1rem',
     outline: 'none',
+    fontFamily: 'inherit',
+    color: '#0f1c2e',
     transition: 'border-color .2s',
+    width: '100%',
   },
   error: {
-    background: '#fef2f2',
-    color: '#dc2626',
-    border: '1px solid #fecaca',
-    borderRadius: '8px',
-    padding: '10px 14px',
-    fontSize: '0.85rem',
-    marginTop: '8px',
+    background: '#ffebee',
+    color: '#c62828',
+    border: '1px solid #ef9a9a',
+    borderRadius: '10px',
+    padding: '12px 16px',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+  },
+  notice: {
+    background: '#fff3e0',
+    color: '#e65100',
+    border: '1px solid #ffcc80',
+    borderRadius: '10px',
+    padding: '12px 16px',
+    fontSize: '0.875rem',
+    fontWeight: '500',
+    marginBottom: '16px',
+    textAlign: 'center',
   },
   btn: {
-    marginTop: '20px',
-    padding: '12px',
-    background: '#1e3a5f',
+    padding: '14px',
+    background: '#1565c0',
     color: '#fff',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: '10px',
     fontSize: '1rem',
     fontWeight: '700',
     cursor: 'pointer',
+    marginTop: '4px',
+    letterSpacing: '0.01em',
   },
-  footer: { textAlign: 'center', marginTop: '20px', fontSize: '0.875rem', color: '#64748b' },
-  link: { color: '#1e3a5f', fontWeight: '600' },
+  footer: { textAlign: 'center', marginTop: '20px', fontSize: '0.875rem', color: '#7a8fa0' },
+  link: { color: '#1565c0', fontWeight: '700' },
 };

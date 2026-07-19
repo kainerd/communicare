@@ -15,7 +15,7 @@ export default function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (form.password !== form.confirm) return setError('Passwords do not match');
+    if (form.password !== form.confirm) return setError('Passwords do not match.');
     setLoading(true);
     setError('');
     try {
@@ -32,19 +32,20 @@ export default function Register() {
     }
   }
 
-  // ── Success state ─────────────────────────────────────────────────────────
+  // ── Success state ──────────────────────────────────────────────────────────
   if (submitted) {
     return (
-      <div style={s.page}>
-        <div style={s.card}>
-          <span style={s.successIcon}>✅</span>
+      <div style={s.page} className="auth-page">
+        <div style={s.card} className="auth-card">
+          <div style={s.successIcon}>✅</div>
           <h2 style={s.successTitle}>Registration Received</h2>
           <p style={s.successMsg}>
-            Your account is <strong>pending admin approval</strong>. Once approved, you will receive
-            a verification email at <strong>{form.email}</strong> with a link to activate your account.
+            Your account is <strong>pending admin approval</strong>. Once approved, you will
+            receive a verification email at <strong>{form.email}</strong> with a link to
+            activate your account.
           </p>
-          <p style={s.successSub}>You will be able to log in after completing email verification.</p>
-          <Link to="/login" style={s.loginLink}>← Back to Login</Link>
+          <p style={s.successSub}>You can log in after completing email verification.</p>
+          <Link to="/login" style={s.backLink}>← Back to Sign In</Link>
         </div>
       </div>
     );
@@ -52,33 +53,53 @@ export default function Register() {
 
   // ── Form ──────────────────────────────────────────────────────────────────
   return (
-    <div style={s.page}>
-      <div style={s.card}>
-        <h1 style={s.logo}>🩺 CommuniCare</h1>
-        <h2 style={s.title}>Create Caregiver Account</h2>
+    <div style={s.page} className="auth-page">
+      <div style={s.card} className="auth-card">
+
+        <div style={s.logoArea} className="cc-auth-logo">
+          <span style={s.logoIcon}>🩺</span>
+          <span style={s.logoText}>CommuniCare</span>
+        </div>
+
+        <h2 style={s.title} className="cc-auth-title">Create Caregiver Account</h2>
+        <p style={s.subtitle}>Register to start supporting patients</p>
+
         <form onSubmit={handleSubmit} style={s.form}>
-          <label style={s.label}>Full Name</label>
-          <input style={s.input} name="name" value={form.name} onChange={handleChange} placeholder="Emmanuel" required />
+          <div style={s.field}>
+            <label style={s.label} htmlFor="name">Full Name</label>
+            <input id="name" style={s.input} name="name" value={form.name}
+              onChange={handleChange} placeholder="Dr. Emmanuel Adjei" required />
+          </div>
 
-          <label style={s.label}>Email</label>
-          <input style={s.input} type="email" name="email" value={form.email} onChange={handleChange} placeholder="you@example.com" required autoComplete="email" />
+          <div style={s.field}>
+            <label style={s.label} htmlFor="reg-email">Email address</label>
+            <input id="reg-email" style={s.input} type="email" name="email" value={form.email}
+              onChange={handleChange} placeholder="you@hospital.com" required autoComplete="email" />
+          </div>
 
-          <label style={s.label}>Password</label>
-          <input style={s.input} type="password" name="password" value={form.password} onChange={handleChange} placeholder="Min. 6 characters" required autoComplete="new-password" />
+          <div style={s.field}>
+            <label style={s.label} htmlFor="reg-pw">Password</label>
+            <input id="reg-pw" style={s.input} type="password" name="password" value={form.password}
+              onChange={handleChange} placeholder="Min. 6 characters" required autoComplete="new-password" />
+          </div>
 
-          <label style={s.label}>Confirm Password</label>
-          <input style={s.input} type="password" name="confirm" value={form.confirm} onChange={handleChange} placeholder="Repeat password" required autoComplete="new-password" />
+          <div style={s.field}>
+            <label style={s.label} htmlFor="reg-confirm">Confirm Password</label>
+            <input id="reg-confirm" style={s.input} type="password" name="confirm" value={form.confirm}
+              onChange={handleChange} placeholder="Repeat password" required autoComplete="new-password" />
+          </div>
 
-          {error && <p style={s.error}>{error}</p>}
+          {error && <p style={s.error} role="alert">{error}</p>}
 
-          <div style={s.notice}>
-            ℹ️ New accounts require admin approval before you can log in.
+          <div style={s.notice} role="note">
+            ℹ️ New accounts require <strong>admin approval</strong> before you can sign in.
           </div>
 
           <button style={s.btn} type="submit" disabled={loading}>
             {loading ? 'Submitting…' : 'Submit Registration'}
           </button>
         </form>
+
         <p style={s.footer}>
           Already have an account?{' '}
           <Link to="/login" style={s.link}>Sign in</Link>
@@ -90,25 +111,70 @@ export default function Register() {
 
 const s = {
   page: {
-    minHeight: '100vh', background: 'linear-gradient(135deg,#1e3a5f,#0f172a)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontFamily: "'Segoe UI', system-ui, sans-serif",
+    minHeight: '100vh',
+    background: 'linear-gradient(160deg, #1565c0 0%, #0d47a1 55%, #01579b 100%)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+    padding: '24px',
   },
-  card: { background: '#fff', borderRadius: '16px', padding: '40px 48px', width: '100%', maxWidth: '420px', boxShadow: '0 24px 64px rgba(0,0,0,0.3)' },
-  logo: { textAlign: 'center', fontSize: '1.5rem', marginBottom: '4px', color: '#1e3a5f' },
-  title: { textAlign: 'center', fontSize: '1.2rem', fontWeight: '700', color: '#334155', marginBottom: '24px' },
-  form: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  label: { fontSize: '0.85rem', fontWeight: '600', color: '#475569', marginTop: '10px' },
-  input: { padding: '10px 14px', borderRadius: '8px', border: '1.5px solid #cbd5e1', fontSize: '0.95rem', outline: 'none', fontFamily: 'inherit' },
-  error: { background: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', fontSize: '0.85rem', marginTop: '8px' },
-  notice: { background: '#eff6ff', color: '#1e40af', border: '1px solid #bfdbfe', borderRadius: '8px', padding: '10px 14px', fontSize: '0.82rem', marginTop: '12px' },
-  btn: { marginTop: '20px', padding: '12px', background: '#1e3a5f', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '1rem', fontWeight: '700', cursor: 'pointer' },
-  footer: { textAlign: 'center', marginTop: '20px', fontSize: '0.875rem', color: '#64748b' },
-  link: { color: '#1e3a5f', fontWeight: '600' },
-  // success state
-  successIcon: { fontSize: '3rem', display: 'block', textAlign: 'center', marginBottom: '16px' },
-  successTitle: { fontSize: '1.3rem', fontWeight: '800', color: '#1e3a5f', textAlign: 'center', marginBottom: '12px' },
-  successMsg: { color: '#475569', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '12px', textAlign: 'center' },
-  successSub: { color: '#94a3b8', fontSize: '0.82rem', textAlign: 'center', marginBottom: '24px' },
-  loginLink: { display: 'block', textAlign: 'center', color: '#1e3a5f', fontWeight: '700', fontSize: '0.9rem' },
+  card: {
+    background: '#ffffff',
+    borderRadius: '20px',
+    padding: '44px 48px',
+    width: '100%',
+    maxWidth: '440px',
+    boxShadow: '0 24px 80px rgba(13,71,161,0.3)',
+  },
+
+  logoArea: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '10px',
+    marginBottom: '20px',
+  },
+  logoIcon: { fontSize: '2rem', lineHeight: 1 },
+  logoText: { fontSize: '1.5rem', fontWeight: '800', color: '#1565c0', letterSpacing: '-0.02em' },
+
+  title: { textAlign: 'center', fontSize: '1.375rem', fontWeight: '800', color: '#0f1c2e', marginBottom: '4px' },
+  subtitle: { textAlign: 'center', fontSize: '0.9rem', color: '#7a8fa0', marginBottom: '28px' },
+
+  form: { display: 'flex', flexDirection: 'column', gap: '14px' },
+  field: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  label: { fontSize: '0.875rem', fontWeight: '600', color: '#4f6070' },
+  input: {
+    padding: '12px 16px',
+    borderRadius: '10px',
+    border: '1.5px solid #dde3ea',
+    fontSize: '1rem',
+    outline: 'none',
+    fontFamily: 'inherit',
+    color: '#0f1c2e',
+    transition: 'border-color .2s',
+    width: '100%',
+  },
+  error: {
+    background: '#ffebee', color: '#c62828', border: '1px solid #ef9a9a',
+    borderRadius: '10px', padding: '12px 16px', fontSize: '0.875rem', fontWeight: '500',
+  },
+  notice: {
+    background: '#e3f2fd', color: '#1565c0', border: '1px solid #90caf9',
+    borderRadius: '10px', padding: '12px 16px', fontSize: '0.875rem', lineHeight: 1.5,
+  },
+  btn: {
+    padding: '14px', background: '#1565c0', color: '#fff', border: 'none',
+    borderRadius: '10px', fontSize: '1rem', fontWeight: '700', cursor: 'pointer',
+    marginTop: '4px', letterSpacing: '0.01em',
+  },
+  footer: { textAlign: 'center', marginTop: '20px', fontSize: '0.875rem', color: '#7a8fa0' },
+  link: { color: '#1565c0', fontWeight: '700' },
+
+  // Success state
+  successIcon:  { fontSize: '3rem', textAlign: 'center', display: 'block', marginBottom: '16px' },
+  successTitle: { fontSize: '1.375rem', fontWeight: '800', color: '#0f1c2e', textAlign: 'center', marginBottom: '14px' },
+  successMsg:   { color: '#4f6070', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '10px', textAlign: 'center' },
+  successSub:   { color: '#7a8fa0', fontSize: '0.85rem', textAlign: 'center', marginBottom: '24px' },
+  backLink:     { display: 'block', textAlign: 'center', color: '#1565c0', fontWeight: '700', fontSize: '0.9rem' },
 };

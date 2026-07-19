@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "db:init": "node config/initDb.js",
+    "db:migrate": "node -e \"require('dotenv').config();const{autoMigrate}=require('./config/autoMigrate');autoMigrate().then(()=>process.exit(0)).catch(e=>{console.error(e);process.exit(1)})\"",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:summary-isolation": "node tests/summaryIsolation.test.js"
   },
   "keywords": [],
   "author": "",

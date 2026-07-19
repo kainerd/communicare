@@ -58,9 +58,18 @@ export const BOARD = {
   ],
 };
 
+/**
+ * CATEGORY_META — drives the AAC board's color-coding.
+ * All `color` values meet WCAG AA 4.5:1 on their respective `bg`.
+ * Color assignments are consistent with clinical conventions:
+ *   Blue = anatomical / body  |  Green = physiological needs
+ *   Purple = psycho-emotional |  Orange-red = symptoms/pain
+ *   Slate = free text (neutral)
+ */
 export const CATEGORY_META = {
-  body_part: { label: 'Body Part', color: '#3b82f6', bg: '#eff6ff' },
-  need:      { label: 'Need',      color: '#f59e0b', bg: '#fffbeb' },
-  emotion:   { label: 'Emotion',   color: '#8b5cf6', bg: '#f5f3ff' },
-  symptom:   { label: 'Symptom',   color: '#ef4444', bg: '#fef2f2' },
+  body_part: { label: 'Body Part', color: '#1565c0', bg: '#e3f2fd', border: '#90caf9' },
+  need:      { label: 'Need',      color: '#2e7d32', bg: '#e8f5e9', border: '#a5d6a7' },
+  emotion:   { label: 'Emotion',   color: '#6a1b9a', bg: '#f3e5f5', border: '#ce93d8' },
+  symptom:   { label: 'Symptom',   color: '#bf360c', bg: '#fbe9e7', border: '#ffab91' },
+  free_text: { label: 'Free Text', color: '#37474f', bg: '#f0f4f8', border: '#b0bec5' },
 };

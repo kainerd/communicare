@@ -6,8 +6,8 @@ export default function NotFound() {
   const { user } = useAuth();
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
+    <div style={s.page} className="auth-page">
+      <div style={s.card} className="auth-card">
         <span style={s.code}>404</span>
         <h2 style={s.title}>Page not found</h2>
         <p style={s.msg}>The page you're looking for doesn't exist or has been moved.</p>

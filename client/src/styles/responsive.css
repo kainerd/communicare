@@ -1,0 +1,340 @@
+/* =======================================================================
+   COMMUNICARE — RESPONSIVE OVERRIDES
+   Strategy: mobile-first base → min-width 480 → 640 → 768 → 1024 → 1280
+   All rules use !important where needed to override inline React styles.
+   ======================================================================= */
+
+/* ── Global ── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: hidden; }
+
+/* ================================================================
+   AUTH PAGES  (Login / Register / VerifyEmail / NotFound)
+   ================================================================ */
+
+.auth-page {
+  padding: 16px !important;
+  align-items: flex-start !important;
+  padding-top: 40px !important;
+}
+
+@media (min-width: 480px) {
+  .auth-page {
+    align-items: center !important;
+    padding-top: 16px !important;
+  }
+}
+
+.auth-card {
+  padding: 28px 22px !important;
+  border-radius: 16px !important;
+}
+
+@media (min-width: 480px) {
+  .auth-card { padding: 36px 32px !important; }
+}
+
+@media (min-width: 768px) {
+  .auth-card { padding: 44px 48px !important; border-radius: 20px !important; }
+}
+
+.auth-card input,
+.auth-card select,
+.auth-card textarea { width: 100%; }
+
+/* ================================================================
+   NAVBAR  (shared Navbar component)
+   ================================================================ */
+
+.cc-nav {
+  padding: 0 14px !important;
+  position: relative !important;
+}
+
+.cc-nav-center { display: none !important; }
+.cc-nav-right  { display: none !important; }
+
+.cc-hamburger {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 40px;
+  height: 40px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
+  min-height: unset !important;
+}
+
+.cc-hamburger span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.cc-hamburger.is-open span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+.cc-hamburger.is-open span:nth-child(2) { opacity: 0; }
+.cc-hamburger.is-open span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+
+.cc-mobile-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1565c0;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  z-index: 200;
+  box-shadow: 0 8px 28px rgba(13, 71, 161, 0.3);
+  padding: 14px 18px;
+}
+
+.cc-mobile-menu.is-open { display: flex; }
+
+.cc-mobile-menu .cc-mobile-weather {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  margin-bottom: 6px;
+}
+
+@media (min-width: 768px) {
+  .cc-nav { padding: 0 28px !important; }
+  .cc-nav-center { display: flex !important; }
+  .cc-nav-right  { display: flex !important; }
+  .cc-hamburger  { display: none !important; }
+  .cc-mobile-menu,
+  .cc-mobile-menu.is-open { display: none !important; }
+}
+
+/* ================================================================
+   ADMIN NAV
+   ================================================================ */
+
+.cc-admin-nav { padding: 0 14px !important; position: relative !important; }
+.cc-admin-badge { display: none !important; }
+.cc-admin-nav-right { display: none !important; }
+
+@media (min-width: 480px) { .cc-admin-badge { display: inline-flex !important; } }
+
+@media (min-width: 768px) {
+  .cc-admin-nav { padding: 0 32px !important; }
+  .cc-admin-nav-right { display: flex !important; }
+}
+
+/* ================================================================
+   CONTENT WRAPPERS
+   ================================================================ */
+
+.cc-content { padding: 16px 14px !important; }
+
+@media (min-width: 480px) { .cc-content { padding: 20px 16px !important; } }
+@media (min-width: 768px) { .cc-content { padding: 28px 20px !important; } }
+@media (min-width: 1024px){ .cc-content { padding: 32px 24px !important; } }
+
+/* ================================================================
+   WEATHER CLOCK
+   ================================================================ */
+
+.wc-city { display: none !important; }
+@media (min-width: 1024px) { .wc-city { display: inline !important; } }
+
+.wc-date { display: none !important; }
+@media (min-width: 560px) { .wc-date { display: inline !important; } }
+
+.wc-full-card { padding: 18px 16px !important; gap: 16px !important; }
+
+@media (min-width: 480px) { .wc-full-card { padding: 22px 20px !important; gap: 20px !important; } }
+@media (min-width: 768px) { .wc-full-card { padding: 24px 28px !important; gap: 28px !important; } }
+
+.wc-divider { display: none !important; }
+@media (min-width: 480px) { .wc-divider { display: block !important; } }
+
+/* ================================================================
+   CAREGIVER DASHBOARD header
+   ================================================================ */
+
+.cc-dash-header {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
+}
+.cc-dash-header button { width: 100%; }
+
+@media (min-width: 600px) {
+  .cc-dash-header {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+  }
+  .cc-dash-header button { width: auto; }
+}
+
+/* ================================================================
+   PATIENT DETAIL
+   ================================================================ */
+
+.cc-patient-card-top {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 14px !important;
+}
+
+.cc-patient-card-actions {
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin-top: 4px;
+}
+.cc-patient-card-actions > button {
+  flex: 1 1 auto;
+  min-width: 110px;
+}
+
+.cc-filter-bar {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+}
+.cc-filter-bar input { width: 100%; }
+
+@media (min-width: 600px) {
+  .cc-patient-card-top {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+  }
+  .cc-patient-card-actions {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+  }
+  .cc-patient-card-actions > button {
+    flex: none;
+    min-width: unset;
+  }
+  .cc-filter-bar {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+  .cc-filter-bar input { width: auto; }
+}
+
+/* ================================================================
+   VISIT SESSION
+   ================================================================ */
+
+.cc-visit-tabs {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: nowrap !important;
+}
+.cc-visit-tabs::-webkit-scrollbar { display: none; }
+
+.cc-visit-header-actions { flex-wrap: wrap !important; gap: 6px !important; }
+
+/* Board grid on mobile — 3 columns keeps buttons large enough */
+@media (max-width: 479px) {
+  .board-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* ================================================================
+   ADMIN DASHBOARD
+   ================================================================ */
+
+.cc-admin-tabs {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  flex-wrap: nowrap !important;
+}
+.cc-admin-tabs::-webkit-scrollbar { display: none; }
+
+.cc-stats-bar { gap: 8px !important; }
+.cc-stat-card { padding: 12px 12px !important; min-width: 64px !important; flex: 1 1 auto; }
+
+.cc-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cc-table-inner  { min-width: 540px; }
+
+.cc-pending-card {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 12px !important;
+}
+.cc-pending-actions { flex-direction: row !important; width: 100%; gap: 8px !important; }
+.cc-pending-actions > button { flex: 1; }
+
+@media (min-width: 600px) {
+  .cc-pending-card {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+  .cc-pending-actions { width: auto; }
+  .cc-pending-actions > button { flex: none; }
+}
+
+/* ================================================================
+   MODALS
+   ================================================================ */
+
+.cc-modal-overlay {
+  padding: 12px !important;
+  align-items: flex-end !important;
+}
+.cc-modal {
+  padding: 26px 20px !important;
+  border-radius: 20px 20px 0 0 !important;
+  max-width: 100% !important;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (min-width: 480px) {
+  .cc-modal-overlay {
+    padding: 20px !important;
+    align-items: center !important;
+  }
+  .cc-modal {
+    padding: 40px 36px !important;
+    border-radius: 18px !important;
+    max-width: 480px !important;
+    max-height: none;
+    overflow-y: visible;
+  }
+}
+
+/* ================================================================
+   TOUCH-FRIENDLY BUTTONS  (≥ 48px height on mobile, WCAG 2.5.5)
+   ================================================================ */
+
+@media (max-width: 767px) {
+  button:not(.cc-hamburger):not([data-notab]) {
+    min-height: 48px;
+  }
+  [data-notab] {
+    min-height: 40px;
+  }
+}
+
+/* ================================================================
+   TYPOGRAPHY
+   ================================================================ */
+
+@media (max-width: 479px) {
+  .cc-sentence-full { font-size: 1.1rem !important; }
+  .cc-auth-logo  { font-size: 1.4rem !important; }
+  .cc-auth-title { font-size: 1.15rem !important; }
+}
+
+/* ================================================================
+   IMAGES & MEDIA
+   ================================================================ */
+
+img, video, svg { max-width: 100%; height: auto; }

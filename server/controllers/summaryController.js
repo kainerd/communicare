@@ -8,6 +8,17 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 async function getSummary(req, res, next) {
   try {
     const { visitId } = req.params;
+
+    // Ownership check (read access): the owning caregiver, or an admin
+    // (read-only access per spec — same convention as getPatient/getVisit).
+    // This was previously missing entirely, letting any authenticated
+    // caregiver read any other caregiver's patient's clinical AI summary.
+    const visit = await findVisit(visitId);
+    if (!visit) return res.status(404).json({ error: 'Visit not found' });
+    if (visit.caregiver_id !== req.dbUser.id && req.dbUser.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const [rows] = await pool.query(
       'SELECT * FROM ai_summaries WHERE visit_id = ? ORDER BY generated_at DESC LIMIT 1',
       [visitId],
@@ -22,6 +33,24 @@ async function generateSummary(req, res, next) {
 
     const visit = await findVisit(visitId);
     if (!visit) return res.status(404).json({ error: 'Visit not found' });
+
+    // Ownership check (write access): only the owning caregiver — matches
+    // the convention used everywhere else a visit is mutated (saveSelections,
+    // saveLog, closeVisit, clearVisitData). This was previously missing,
+    // letting any authenticated caregiver (or admin) trigger AI summary
+    // generation — and consume the Anthropic API quota — against a visit
+    // that isn't theirs.
+    if (visit.caregiver_id !== req.dbUser.id) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Closed visits are immutable everywhere else in the app (board/speech
+    // writes are blocked once a visit is closed) — summary generation should
+    // follow the same rule instead of allowing a "final" visit record to keep
+    // changing after it's been completed & saved.
+    if (visit.status === 'closed') {
+      return res.status(400).json({ error: 'Visit is closed — cannot generate a new summary.' });
+    }
 
     const patient = await findPatient(visit.patient_id);
 

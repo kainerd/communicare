@@ -4,8 +4,9 @@ const { pool } = require('../config/db');
 const {
   getAllCaregivers, getPendingCaregivers, setStatus,
   updatePassword, updateUser, findById, findByEmail,
-  setApproved, setVerificationToken,
+  setApproved, setVerificationToken, deleteUser,
 } = require('../models/userModel');
+const { reassignCaregiver, findById: findPatient } = require('../models/patientModel');
 const { sendVerificationEmail } = require('../utils/email');
 
 // ── Caregivers ───────────────────────────────────────────────────────────────
@@ -77,6 +78,72 @@ async function setCaregiverStatus(req, res, next) {
   } catch (err) { next(err); }
 }
 
+/**
+ * DELETE /api/admin/caregivers/:id
+ * Permanently deletes a caregiver's User account.
+ *
+ * Does NOT delete their patients or visit history — patients.caregiver_id
+ * and visits.caregiver_id are ON DELETE SET NULL, so this unlinks them
+ * instead (they become "Unassigned" and stay fully visible/reassignable
+ * via listAllPatients / reassignPatient below). This is a deliberate
+ * design choice per spec: user deletion must never destroy clinical data.
+ */
+async function deleteCaregiver(req, res, next) {
+  try {
+    const { id } = req.params;
+    const user = await findById(id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    if (user.role !== 'caregiver') {
+      return res.status(400).json({ error: 'Can only delete caregiver accounts' });
+    }
+
+    // Count what will be unlinked so the admin gets clear feedback
+    const [[{ patientCount }]] = await pool.query(
+      'SELECT COUNT(*) AS patientCount FROM patients WHERE caregiver_id = ?',
+      [id],
+    );
+
+    // WHERE id = ? — deletes exactly one user row by primary key; parameterized
+    await deleteUser(id);
+
+    res.json({
+      message: patientCount > 0
+        ? `Caregiver "${user.name}" deleted. ${patientCount} patient(s) were unlinked and are now unassigned — reassign them from the Patients tab.`
+        : `Caregiver "${user.name}" deleted.`,
+      deletedUserId: Number(id),
+      unassignedPatientCount: Number(patientCount),
+    });
+  } catch (err) { next(err); }
+}
+
+/**
+ * PATCH /api/admin/patients/:id/reassign
+ * Body: { caregiver_id }
+ * Moves a patient (typically one orphaned by deleteCaregiver) to a
+ * different active caregiver.
+ */
+async function reassignPatient(req, res, next) {
+  try {
+    const { id } = req.params;
+    const { caregiver_id } = req.body;
+    if (!caregiver_id) return res.status(400).json({ error: 'caregiver_id is required' });
+
+    const patient = await findPatient(id);
+    if (!patient) return res.status(404).json({ error: 'Patient not found' });
+
+    const newCaregiver = await findById(caregiver_id);
+    if (!newCaregiver || newCaregiver.role !== 'caregiver') {
+      return res.status(400).json({ error: 'caregiver_id must belong to an existing caregiver account' });
+    }
+    if (newCaregiver.status !== 'active') {
+      return res.status(400).json({ error: 'Cannot reassign to a disabled/rejected caregiver account' });
+    }
+
+    await reassignCaregiver(id, caregiver_id);
+    res.json({ message: `Patient "${patient.full_name}" reassigned to ${newCaregiver.name}.` });
+  } catch (err) { next(err); }
+}
+
 async function resetCaregiverPassword(req, res, next) {
   try {
     const { id } = req.params;
@@ -100,11 +167,14 @@ async function resetCaregiverPassword(req, res, next) {
 
 async function listAllPatients(req, res, next) {
   try {
+    // LEFT JOIN (not JOIN): a patient whose caregiver was deleted has
+    // caregiver_id = NULL — an inner join would silently hide them from
+    // this list, making an "unlinked" patient effectively invisible/lost.
     const [rows] = await pool.query(
       `SELECT p.*, u.name AS caregiver_name,
          (SELECT COUNT(*) FROM visits v WHERE v.patient_id = p.id) AS visit_count
        FROM patients p
-       JOIN users u ON u.id = p.caregiver_id
+       LEFT JOIN users u ON u.id = p.caregiver_id
        ORDER BY p.created_at DESC`,
     );
     res.json({ patients: rows });
@@ -115,13 +185,15 @@ async function listAllPatients(req, res, next) {
 
 async function listAllVisits(req, res, next) {
   try {
+    // LEFT JOIN users: a visit whose caregiver was deleted has
+    // caregiver_id = NULL — must still show up (an inner join would hide it).
     const [rows] = await pool.query(
       `SELECT v.*, 
          p.full_name AS patient_name,
          u.name AS caregiver_name
        FROM visits v
        JOIN patients p ON p.id = v.patient_id
-       JOIN users    u ON u.id = v.caregiver_id
+       LEFT JOIN users u ON u.id = v.caregiver_id
        ORDER BY v.visit_date DESC
        LIMIT 200`,
     );
@@ -173,5 +245,6 @@ module.exports = {
   listCaregivers, listPendingCaregivers,
   approveCaregiver, rejectCaregiver,
   setCaregiverStatus, resetCaregiverPassword, updateCaregiver,
+  deleteCaregiver, reassignPatient,
   listAllPatients, listAllVisits,
 };

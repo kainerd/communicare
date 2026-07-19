@@ -29,8 +29,8 @@ export default function VerifyEmail() {
   }, [token]);
 
   return (
-    <div style={s.page}>
-      <div style={s.card}>
+    <div style={s.page} className="auth-page">
+      <div style={s.card} className="auth-card">
         {status === 'loading' && (
           <>
             <span style={s.icon}>⏳</span>

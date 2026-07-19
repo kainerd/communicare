@@ -95,9 +95,16 @@ async function updateUser(id, fields) {
   await pool.query(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`, vals);
 }
 
+async function deleteUser(id) {
+  // patients.caregiver_id and visits.caregiver_id are ON DELETE SET NULL
+  // (see config/fixUserDeleteFK.js) — deleting the user row unlinks their
+  // patients/visits automatically instead of destroying that data.
+  await pool.query('DELETE FROM users WHERE id = ?', [id]);
+}
+
 module.exports = {
   findByEmail, findById, findByIdFull, findByVerificationToken,
   createUser, getAllCaregivers, getPendingCaregivers,
   setApproved, setVerified, setVerificationToken,
-  setStatus, updatePassword, updateUser,
+  setStatus, updatePassword, updateUser, deleteUser,
 };

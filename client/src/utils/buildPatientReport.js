@@ -157,7 +157,7 @@ export function buildPatientReport(patient, visits) {
         headStyles: { fillColor: [51, 65, 85], textColor: 255, fontStyle: 'bold' },
         alternateRowStyles: { fillColor: LIGHT_GRAY },
         columnStyles: { 0: { fontStyle: 'bold', cellWidth: 38 }, 1: { cellWidth: contentW - 38 } },
-        didDrawPage: () => { y = doc.lastAutoTable.finalY + 6; drawPageFooter(); },
+        didDrawPage: () => { drawPageFooter(); },
       });
       y = doc.lastAutoTable.finalY + 6;
     } else {

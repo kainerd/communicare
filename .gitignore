@@ -1,5 +1,26 @@
+# Dependencies
 node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment files — never commit real secrets
 .env
+server/.env
+client/.env
+client/.env.local
+
+# Build output
+client/dist/
+client/build/
+
+# Logs
 *.log
-dist/
-build/
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/

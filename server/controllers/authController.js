@@ -70,8 +70,9 @@ async function login(req, res, next) {
       return res.status(403).json({ error: 'Your account is pending admin approval.' });
     }
 
-    // Email verification gate
-    if (!user.is_verified) {
+    // Email verification gate (caregivers only — admin is always approved/verified,
+    // and has no self-registration or verification-email flow to ever satisfy this)
+    if (user.role === 'caregiver' && !user.is_verified) {
       return res.status(403).json({ error: 'Please verify your email address before logging in. Check your inbox for the verification link.' });
     }
 

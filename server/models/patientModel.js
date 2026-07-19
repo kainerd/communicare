@@ -33,4 +33,8 @@ async function updatePatient(id, { fullName, age, gender, medicalNotes }) {
   );
 }
 
-module.exports = { createPatient, findByCaregiver, findById, updatePatient };
+async function reassignCaregiver(patientId, caregiverId) {
+  await pool.query('UPDATE patients SET caregiver_id = ? WHERE id = ?', [caregiverId, patientId]);
+}
+
+module.exports = { createPatient, findByCaregiver, findById, updatePatient, reassignCaregiver };

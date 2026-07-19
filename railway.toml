@@ -1,0 +1,14 @@
+# Railway configuration — deploys the /server directory as the Node.js backend service.
+# Set the "Root Directory" to "server" in the Railway service settings,
+# or Railway picks this up automatically when you connect this repo.
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "node index.js"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[[services]]
+name = "communicare-api"
