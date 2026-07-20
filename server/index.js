@@ -51,8 +51,17 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
+  // Always log the full error + stack so Railway/server logs capture the real cause.
+  console.error(`[ERROR] ${req.method} ${req.path} →`, err.message);
   console.error(err.stack);
-  res.status(500).json({ error: 'Internal server error' });
+
+  // In development expose the actual message to the client too, which makes
+  // debugging from the browser much faster. In production keep it generic.
+  const body = process.env.NODE_ENV !== 'production'
+    ? { error: err.message || 'Internal server error' }
+    : { error: 'Internal server error' };
+
+  res.status(err.status || 500).json(body);
 });
 
 app.listen(PORT, async () => {

@@ -3,6 +3,12 @@ const { pool } = require('../config/db');
 const { findById: findVisit } = require('../models/visitModel');
 const { findById: findPatient } = require('../models/patientModel');
 
+// Warn loudly at startup if the key is missing so it shows up in Railway logs
+// immediately rather than only when a caregiver first tries to generate a summary.
+if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your-anthropic-api-key-here') {
+  console.warn('[summaryController] WARNING: ANTHROPIC_API_KEY is not set or still uses the placeholder value. AI summary generation will fail with a 503 until this is configured.');
+}
+
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 async function getSummary(req, res, next) {
@@ -53,6 +59,9 @@ async function generateSummary(req, res, next) {
     }
 
     const patient = await findPatient(visit.patient_id);
+    if (!patient) {
+      return res.status(404).json({ error: 'Patient record not found for this visit.' });
+    }
 
     // Pull all visit data
     const [boardRows] = await pool.query(
@@ -114,13 +123,35 @@ INSTRUCTIONS:
 - Keep the summary to 2–4 sentences, factual, and written in third person (e.g. "The patient indicated…").
 - End with a brief note on recommended follow-up if clinically appropriate based on the data.`;
 
-    const message = await anthropic.messages.create({
-      model: 'claude-opus-4-5',
-      max_tokens: 512,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    // Guard: API key must be configured before making the call.
+    if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY === 'your-anthropic-api-key-here') {
+      return res.status(503).json({ error: 'AI summary service is not configured. Ask your administrator to set the ANTHROPIC_API_KEY environment variable.' });
+    }
 
-    const summaryText = message.content[0].text.trim();
+    let message;
+    try {
+      message = await anthropic.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 512,
+        messages: [{ role: 'user', content: prompt }],
+      });
+    } catch (apiErr) {
+      console.error('[summaryController] Anthropic API error:', apiErr.message, apiErr.status ?? '');
+      const status = apiErr.status === 401 ? 503 : 502;
+      const msg = apiErr.status === 401
+        ? 'AI service authentication failed. Check that ANTHROPIC_API_KEY is correct in your environment.'
+        : `AI service error: ${apiErr.message}`;
+      return res.status(status).json({ error: msg });
+    }
+
+    // Validate the response shape before accessing content[0].text
+    const textBlock = message.content?.find((b) => b.type === 'text');
+    if (!textBlock || typeof textBlock.text !== 'string') {
+      console.error('[summaryController] Unexpected Anthropic response shape:', JSON.stringify(message.content));
+      return res.status(502).json({ error: 'AI service returned an unexpected response. Please try again.' });
+    }
+
+    const summaryText = textBlock.text.trim();
 
     // Store in ai_summaries
     const [result] = await pool.query(
