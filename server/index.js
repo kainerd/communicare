@@ -51,15 +51,22 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
-  // Always log the full error + stack so Railway/server logs capture the real cause.
-  console.error(`[ERROR] ${req.method} ${req.path} →`, err.message);
-  console.error(err.stack);
+  // Always log the full error object + stack so Railway/server logs capture
+  // the real cause (not just a generic "Internal Server Error" string).
+  console.error(`[ERROR] ${req.method} ${req.originalUrl} →`, {
+    message: err.message,
+    name: err.name,
+    code: err.code,
+    sqlMessage: err.sqlMessage,
+    status: err.status,
+    stack: err.stack,
+  });
 
   // In development expose the actual message to the client too, which makes
   // debugging from the browser much faster. In production keep it generic.
   const body = process.env.NODE_ENV !== 'production'
-    ? { error: err.message || 'Internal server error' }
-    : { error: 'Internal server error' };
+    ? { error: err.message || 'Internal Server Error' }
+    : { error: 'Internal Server Error' };
 
   res.status(err.status || 500).json(body);
 });
